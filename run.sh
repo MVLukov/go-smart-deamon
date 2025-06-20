@@ -1,0 +1,1 @@
+go build -o go-smart-deamon &&  sudo ./go-smart-deamon

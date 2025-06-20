@@ -1,0 +1,11 @@
+[Unit]
+Description=SMART Daemon Agent
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/go-smart-deamon
+User=root
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

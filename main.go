@@ -24,118 +24,156 @@ type LSBLKOutput struct {
 }
 
 type SmartctlOutput struct {
-	Smartctl struct {
-		Version     []int    `json:"version"`
-		SvnRevision string   `json:"svn_revision"`
-		Platform    string   `json:"platform_info"`
-		BuildInfo   string   `json:"build_info"`
-		Argv        []string `json:"argv"`
-		ExitStatus  int      `json:"exit_status"`
-	} `json:"smartctl"`
+	JsonFormatVersion []int    `json:"json_format_version"`
+	Smartctl          Smartctl `json:"smartctl"`
+	Device            Device   `json:"device"`
 
-	Device struct {
-		Name     string `json:"name"`
-		InfoName string `json:"info_name"`
-		Type     string `json:"type"`
-		Protocol string `json:"protocol"`
-	} `json:"device"`
+	ModelName        string   `json:"model_name"`
+	SerialNumber     string   `json:"serial_number"`
+	FirmwareVersion  string   `json:"firmware_version"`
+	UserCapacity     Capacity `json:"user_capacity"`
+	LogicalBlockSize int      `json:"logical_block_size,omitempty"`
 
-	ModelName       string `json:"model_name"`
-	SerialNumber    string `json:"serial_number"`
-	FirmwareVersion string `json:"firmware_version"`
+	Temperature     *TemperatureWrapper `json:"temperature,omitempty"`
+	PowerCycleCount int                 `json:"power_cycle_count,omitempty"`
+	PowerOnTime     PowerOnTime         `json:"power_on_time,omitempty"`
+	LocalTime       LocalTime           `json:"local_time"`
 
-	NVMePCIVendor struct {
-		ID          int `json:"id"`
-		SubsystemID int `json:"subsystem_id"`
-	} `json:"nvme_pci_vendor"`
+	SmartStatus *SmartStatus `json:"smart_status,omitempty"`
 
-	NVMeIEEEOUIIdentifier   int64 `json:"nvme_ieee_oui_identifier"`
-	NVMETotalCapacity       int64 `json:"nvme_total_capacity"`
-	NVMeUnallocatedCapacity int64 `json:"nvme_unallocated_capacity"`
-	NVMeControllerID        int   `json:"nvme_controller_id"`
+	// NVMe-specific
+	NVMePCI             *NVMePCIVendor              `json:"nvme_pci_vendor,omitempty"`
+	NVMeIEEE            *int                        `json:"nvme_ieee_oui_identifier,omitempty"`
+	NVMeTotalCapacity   *int64                      `json:"nvme_total_capacity,omitempty"`
+	NVMeUnallocCapacity *int64                      `json:"nvme_unallocated_capacity,omitempty"`
+	NVMeControllerID    *int                        `json:"nvme_controller_id,omitempty"`
+	NVMeVersion         *NVMeVersion                `json:"nvme_version,omitempty"`
+	NVMeNamespaces      []NVMeNamespace             `json:"nvme_namespaces,omitempty"`
+	NVMESmartLog        *NVMESmartHealthInformation `json:"nvme_smart_health_information_log,omitempty"`
 
-	NVMeVersion struct {
-		String string `json:"string"`
-		Value  int    `json:"value"`
-	} `json:"nvme_version"`
+	// SATA-specific
+	ATAAttributes      *ATAAttributes `json:"ata_smart_attributes,omitempty"`
+	ATASmartStatus     *ATAStatus     `json:"ata_smart_status,omitempty"`
+	ATAErrorLogVersion *int           `json:"ata_error_count,omitempty"`
+}
 
-	NVMeNumberOfNamespaces int `json:"nvme_number_of_namespaces"`
+type Smartctl struct {
+	Version     []int    `json:"version"`
+	SVNRevision string   `json:"svn_revision"`
+	Platform    string   `json:"platform_info"`
+	BuildInfo   string   `json:"build_info"`
+	Argv        []string `json:"argv"`
+	ExitStatus  int      `json:"exit_status"`
+}
 
-	NVMENamespaces []struct {
-		ID   int `json:"id"`
-		Size struct {
-			Blocks int64 `json:"blocks"`
-			Bytes  int64 `json:"bytes"`
-		} `json:"size"`
-		Capacity struct {
-			Blocks int64 `json:"blocks"`
-			Bytes  int64 `json:"bytes"`
-		} `json:"capacity"`
-		Utilization struct {
-			Blocks int64 `json:"blocks"`
-			Bytes  int64 `json:"bytes"`
-		} `json:"utilization"`
-		FormattedLBASize int `json:"formatted_lba_size"`
-		EUI64            struct {
-			OUI   int   `json:"oui"`
-			ExtID int64 `json:"ext_id"`
-		} `json:"eui64"`
-	} `json:"nvme_namespaces"`
+type Device struct {
+	Name     string `json:"name"`
+	InfoName string `json:"info_name"`
+	Type     string `json:"type"`
+	Protocol string `json:"protocol"`
+}
 
-	UserCapacity struct {
-		Blocks int64 `json:"blocks"`
-		Bytes  int64 `json:"bytes"`
-	} `json:"user_capacity"`
+type Capacity struct {
+	Blocks int64 `json:"blocks"`
+	Bytes  int64 `json:"bytes"`
+}
 
-	LogicalBlockSize int `json:"logical_block_size"`
+type TemperatureWrapper struct {
+	Current int `json:"current"`
+}
 
-	LocalTime struct {
-		TimeT   int64  `json:"time_t"`
-		Asctime string `json:"asctime"`
-	} `json:"local_time"`
+type PowerOnTime struct {
+	Hours int `json:"hours"`
+}
 
-	SmartStatus struct {
-		Passed bool `json:"passed"`
-		NVMe   struct {
-			Value int `json:"value"`
-		} `json:"nvme"`
-	} `json:"smart_status"`
+type LocalTime struct {
+	TimeT   int64  `json:"time_t"`
+	Asctime string `json:"asctime"`
+}
 
-	NVMESMARTHealthInfo struct {
-		CriticalWarning         int   `json:"critical_warning"`
-		Temperature             int   `json:"temperature"`
-		AvailableSpare          int   `json:"available_spare"`
-		AvailableSpareThreshold int   `json:"available_spare_threshold"`
-		PercentageUsed          int   `json:"percentage_used"`
-		DataUnitsRead           int64 `json:"data_units_read"`
-		DataUnitsWritten        int64 `json:"data_units_written"`
-		HostReads               int64 `json:"host_reads"`
-		HostWrites              int64 `json:"host_writes"`
-		ControllerBusyTime      int64 `json:"controller_busy_time"`
-		PowerCycles             int64 `json:"power_cycles"`
-		PowerOnHours            int64 `json:"power_on_hours"`
-		UnsafeShutdowns         int64 `json:"unsafe_shutdowns"`
-		MediaErrors             int64 `json:"media_errors"`
-		NumErrLogEntries        int64 `json:"num_err_log_entries"`
-		WarningTempTime         int64 `json:"warning_temp_time"`
-		CriticalCompTime        int64 `json:"critical_comp_time"`
-		TemperatureSensors      []int `json:"temperature_sensors"`
-	} `json:"nvme_smart_health_information_log"`
+type SmartStatus struct {
+	Passed bool `json:"passed"`
+	NVMe   *struct {
+		Value int `json:"value"`
+	} `json:"nvme,omitempty"`
+}
 
-	Temperature struct {
-		Current int `json:"current"`
-	} `json:"temperature"`
+type NVMePCIVendor struct {
+	ID          int `json:"id"`
+	SubsystemID int `json:"subsystem_id"`
+}
 
-	PowerCycleCount int64 `json:"power_cycle_count"`
+type NVMeVersion struct {
+	String string `json:"string"`
+	Value  int    `json:"value"`
+}
 
-	PowerOnTime struct {
-		Hours int64 `json:"hours"`
-	} `json:"power_on_time"`
+type NVMeNamespace struct {
+	ID               int      `json:"id"`
+	Size             Capacity `json:"size"`
+	Capacity         Capacity `json:"capacity"`
+	Utilization      Capacity `json:"utilization"`
+	FormattedLBASize int      `json:"formatted_lba_size"`
+	EUI64            struct {
+		Oui   int   `json:"oui"`
+		ExtID int64 `json:"ext_id"`
+	} `json:"eui64"`
+}
+
+type NVMESmartHealthInformation struct {
+	CriticalWarning      int   `json:"critical_warning"`
+	Temperature          int   `json:"temperature"`
+	AvailableSpare       int   `json:"available_spare"`
+	AvailableSpareThresh int   `json:"available_spare_threshold"`
+	PercentageUsed       int   `json:"percentage_used"`
+	DataUnitsRead        int64 `json:"data_units_read"`
+	DataUnitsWritten     int64 `json:"data_units_written"`
+	HostReads            int64 `json:"host_reads"`
+	HostWrites           int64 `json:"host_writes"`
+	ControllerBusyTime   int64 `json:"controller_busy_time"`
+	PowerCycles          int   `json:"power_cycles"`
+	PowerOnHours         int   `json:"power_on_hours"`
+	UnsafeShutdowns      int   `json:"unsafe_shutdowns"`
+	MediaErrors          int   `json:"media_errors"`
+	NumErrLogEntries     int64 `json:"num_err_log_entries"`
+	WarningTempTime      int   `json:"warning_temp_time"`
+	CriticalCompTime     int   `json:"critical_comp_time"`
+	TemperatureSensors   []int `json:"temperature_sensors"`
+}
+
+type ATAStatus struct {
+	Passed bool `json:"passed"`
+}
+
+type ATAAttributes struct {
+	Revision int `json:"revision"`
+	Table    []struct {
+		ID         int    `json:"id"`
+		Name       string `json:"name"`
+		Value      int    `json:"value"`
+		Worst      int    `json:"worst"`
+		Thresh     int    `json:"thresh"`
+		WhenFailed string `json:"when_failed"`
+		Flags      struct {
+			Value         int    `json:"value"`
+			String        string `json:"string"`
+			Prefailure    bool   `json:"prefailure"`
+			UpdatedOnline bool   `json:"updated_online"`
+			Performance   bool   `json:"performance"`
+			ErrorRate     bool   `json:"error_rate"`
+			EventCount    bool   `json:"event_count"`
+			AutoKeep      bool   `json:"auto_keep"`
+		} `json:"flags"`
+		Raw struct {
+			Value  int    `json:"value"`
+			String string `json:"string"`
+		} `json:"raw"`
+	} `json:"table"`
 }
 
 type SMARTInfo struct {
-	Device string         `json:"device"`
-	Output SmartctlOutput `json:"output"`
+	Device string
+	Output SmartctlOutput
 }
 
 func getDevices() (LSBLKOutput, error) {

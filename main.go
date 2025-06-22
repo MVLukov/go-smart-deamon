@@ -1,4 +1,4 @@
-package main
+package gosmartdeamon
 
 import (
 	"encoding/json"
